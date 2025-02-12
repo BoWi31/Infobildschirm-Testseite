@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infobildschirm BoWi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .header {
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(90deg, #0066cc, #33cc33);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: white;
+            font-size: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        .clock {
+            font-size: 18px;
+        }
+        .weather-widget {
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            margin-top: 60px;
+            width: 100%;
+            height: calc(100vh - 60px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .navigation {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            transform: translateY(-50%);
+        }
+        .nav-button {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        .nav-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="clock" id="clock"></div>
+        <div>Infobildschirm BoWi</div>
+        <div class="weather-widget">
+            <iframe src="https://www.meteoblue.com/en/weather/widget/daily?geoloc=fixed&days=3&tempunit=C&windunit=kmh&precipunit=mm&col=blue" width="150" height="50" frameborder="0" scrolling="no"></iframe>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div id="content"></div>
+        
+        <div class="navigation">
+            <button class="nav-button" onclick="prevScreen()">◀</button>
+            <button class="nav-button" onclick="nextScreen()">▶</button>
+        </div>
+    </div>
+    
+    <script>
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours().toString().padStart(2, '0');
+            let minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById("clock").innerText = hours + ":" + minutes;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+        
+        const screens = [
+            { url: "https://ajax.webuntis.com/WebUntis/monitor?school=HRS%20Peine&monitorType=subst&format=Vertretung%20Le%20Wi", duration: 300000 },
+            { url: "https://bowi31.github.io/anschlussfoerderung", duration: 30000 }
+        ];
+        
+        let currentIndex = 0;
+
+        function showScreen(index) {
+            document.getElementById("content").innerHTML = `<iframe src="${screens[index].url}" width="100%" height="100%" frameborder="0"></iframe>`;
+        }
+
+        function cycleScreens() {
+            showScreen(currentIndex);
+            setTimeout(() => {
+                currentIndex = (currentIndex + 1) % screens.length;
+                cycleScreens();
+            }, screens[currentIndex].duration);
+        }
+        
+        function nextScreen() {
+            currentIndex = (currentIndex + 1) % screens.length;
+            showScreen(currentIndex);
+        }
+        
+        function prevScreen() {
+            currentIndex = (currentIndex - 1 + screens.length) % screens.length;
+            showScreen(currentIndex);
+        }
+        
+        showScreen(currentIndex);
+        cycleScreens();
+    </script>
+</body>
+</html>
