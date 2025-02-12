@@ -18,6 +18,7 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
+            overflow: hidden;
         }
         .header {
             width: 100%;
@@ -37,20 +38,22 @@
         .clock {
             font-size: 18px;
         }
-        .weather-widget {
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
         .container {
             margin-top: 60px;
-            width: 100%;
+            width: 100vw;
             height: calc(100vh - 60px);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
+        }
+        iframe {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
         .navigation {
             position: absolute;
@@ -78,9 +81,6 @@
     <div class="header">
         <div class="clock" id="clock"></div>
         <div>Infobildschirm BoWi</div>
-        <div class="weather-widget">
-            <iframe src="https://www.meteoblue.com/en/weather/widget/daily?geoloc=fixed&days=3&tempunit=C&windunit=kmh&precipunit=mm&col=blue" width="150" height="50" frameborder="0" scrolling="no"></iframe>
-        </div>
     </div>
     
     <div class="container">
@@ -104,7 +104,8 @@
         
         const screens = [
             { url: "https://ajax.webuntis.com/WebUntis/monitor?school=HRS%20Peine&monitorType=subst&format=Vertretung%20Le%20Wi", duration: 300000 },
-            { url: "https://bowi31.github.io/anschlussfoerderung", duration: 30000 }
+            { url: "https://bowi31.github.io/anschlussfoerderung", duration: 30000 },
+            { url: "https://www.meteoblue.com/en/weather/widget/daily?geoloc=fixed&days=3&tempunit=C&windunit=kmh&precipunit=mm&col=blue", duration: 30000 }
         ];
         
         let currentIndex = 0;
