@@ -4,110 +4,254 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bildungsbiografie-Spiel</title>
   <style>
-    body { font-family: sans-serif; padding: 2rem; background: #f9f9f9; }
-    .karte { background: white; border-radius: 10px; padding: 1rem; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1rem; }
-    .btn { padding: 0.75rem 1.5rem; background: #007acc; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; }
-    .biografie { margin-top: 2rem; padding: 1rem; background: #e8f5e9; border-radius: 8px; }
-    #output p { font-size: 1.1rem; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 2rem;
+    }
+    .karte {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+      position: relative;
+      transition: all 0.4s ease-in-out;
+      animation: fadeIn 0.8s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      background: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s;
+    }
+    .btn:hover {
+      background: #004c99;
+    }
+    .biografie {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #e0f7fa;
+      border-radius: 10px;
+    }
+    .info {
+      font-size: 0.9rem;
+      color: #444;
+      margin-top: 0.75rem;
+    }
+    .balken-container {
+      margin-top: 1rem;
+    }
+    .balken {
+      background: #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    .balken span {
+      display: block;
+      background-color: #007acc;
+      color: white;
+      padding: 0.25rem 0.5rem;
+    }
+    .pfad {
+      display: flex;
+      gap: 10px;
+      margin-top: 2rem;
+    }
+    .pfad .schritt {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #ccc;
+      text-align: center;
+      line-height: 25px;
+      color: white;
+      font-weight: bold;
+    }
+    .pfad .aktiv {
+      background: #007acc;
+    }
+    #avatarName {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    .legende {
+      font-size: 0.85rem;
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: #fff3cd;
+      border-radius: 6px;
+    }
+    .icon {
+      font-size: 1.5rem;
+      margin-right: 0.5rem;
+    }
   </style>
 </head>
 <body>
   <h1>Bildungsbiografie-Spiel</h1>
   <div class="karte" id="output">
-    <p>Starte dein Leben: Klicke unten auf "Zieh".</p>
+    <p>Wie heißt du?</p>
+    <input id="avatarName" placeholder="Dein Vorname...">
+    <button class="btn" onclick="startSpiel()">Spiel starten</button>
   </div>
-  <button class="btn" onclick="ziehen()">Zieh</button>  <div class="biografie" id="biografie">
+  <div class="pfad" id="pfad"></div>
+  <div class="biografie" id="biografie" style="display:none">
     <h3>Deine Biografie:</h3>
     <ul id="log"></ul>
+  </div>
+  <div class="legende">
+    <strong>Legende:</strong> Jede Kugel steht für eine Phase deines Bildungsweges. Die aktuelle Phase ist blau hervorgehoben.
   </div>  <script>
+    let herkunftInfo = "";
+    let extraZug = false;
+    let herkunftstyp = "";
+
+    const icons = ["\u{1F46A}", "\u{1F464}", "\u{1F3EB}", "\u{1F4DA}"];
+
     const stationen = [
       {
         titel: "Herkunft",
+        info: "Die soziale Herkunft beeinflusst Bildungschancen maßgeblich. Quelle: Bildungsbericht 2022.",
+        farbe: "#fce4ec",
+        icon: icons[0],
         karten: [
-          { text: "Hauptschuleltern – wenig Unterstützung, kaum Bücher." },
-          { text: "Realschuleltern – mittlere Bildung, wenig Förderung." },
-          { text: "Abi-Eltern – stabiles Umfeld mit Bildungserwartung." },
-          { text: "Akademikereltern – gezielte Förderung, Zugang zu Ressourcen." }
+          { text: "Hauptschuleltern – wenig Unterstützung, kaum Bücher.", typ: "niedrig", wahrscheinlichkeit: 50 },
+          { text: "Realschuleltern – mittlere Bildung, wenig Förderung.", typ: "mittel", wahrscheinlichkeit: 20 },
+          { text: "Abi-Eltern – stabiles Umfeld mit Bildungserwartung.", typ: "hoch", wahrscheinlichkeit: 20 },
+          { text: "Akademikereltern – gezielte Förderung, Zugang zu Ressourcen.", typ: "sehrhoch", wahrscheinlichkeit: 10 }
         ]
       },
       {
         titel: "Modifikator",
+        info: "Strukturelle Faktoren wie Wohnort oder familiäre Situation beeinflussen Bildungspfade. Quelle: Destatis 2023.",
+        farbe: "#ede7f6",
+        icon: icons[1],
         karten: [
-          { text: "Kein Modifikator – du startest ohne strukturelle Benachteiligung." },
-          { text: "Migrationshintergrund – Sprache & Systeme sind neu für deine Familie." },
-          { text: "Alleinerziehend – wenig Zeit für Unterstützung, viel Eigenverantwortung." },
-          { text: "Ländlicher Raum – weiter Schulweg, wenig Angebote." },
-          { text: "Behinderung – du hast eine diagnostizierte Lernstörung." },
-          { text: "Geflüchtet – du lebst in einem neuen Land mit vielen Herausforderungen." }
+          { text: "Kein Modifikator – du startest ohne strukturelle Benachteiligung.", wahrscheinlichkeit: 40 },
+          { text: "Migrationshintergrund – Sprache & Systeme sind neu für deine Familie.", wahrscheinlichkeit: 20 },
+          { text: "Alleinerziehend – wenig Zeit für Unterstützung, viel Eigenverantwortung.", wahrscheinlichkeit: 10 },
+          { text: "Ländlicher Raum – weiter Schulweg, wenig Angebote.", wahrscheinlichkeit: 10 },
+          { text: "Behinderung – du hast eine diagnostizierte Lernstörung.", wahrscheinlichkeit: 10 },
+          { text: "Geflüchtet – du lebst in einem neuen Land mit vielen Herausforderungen.", wahrscheinlichkeit: 10 }
         ]
       },
       {
         titel: "Frühe Weichenstellung",
+        info: "Frühkindliche Bildung hat langfristigen Einfluss auf schulische Laufbahnen. Quelle: DJI 2022.",
+        farbe: "#e8f5e9",
+        icon: icons[2],
         karten: [
-          { text: "Kein Kita-Besuch – du lernst Strukturen erst in der Schule kennen." },
-          { text: "Kita mit Sprachförderung – du entwickelst schnell Wortschatz & Ausdruck." },
-          { text: "Vorlesen zuhause – du entwickelst früh Interesse an Sprache." },
-          { text: "Unstrukturierter Alltag – du bist viel allein." }
+          { text: "Kein Kita-Besuch – du lernst Strukturen erst in der Schule kennen.", wahrscheinlichkeit: 25 },
+          { text: "Kita mit Sprachförderung – du entwickelst schnell Wortschatz & Ausdruck. (Bonus: bessere Karte in Runde 1)", wahrscheinlichkeit: 25, bonus: true },
+          { text: "Vorlesen zuhause – du entwickelst früh Interesse an Sprache. (Bonus: bessere Karte in Runde 1)", wahrscheinlichkeit: 25, bonus: true },
+          { text: "Unstrukturierter Alltag – du bist viel allein.", wahrscheinlichkeit: 25 }
         ]
       },
       {
         titel: "Grundschulempfehlung",
+        info: "Die Empfehlung nach Klasse 4 hängt oft stark vom sozialen Hintergrund ab. Quelle: KMK 2021.",
+        farbe: "#fff8e1",
+        icon: icons[3],
         karten: [
-          { text: "Hauptschulempfehlung – wegen Noten und Verhalten." },
-          { text: "Realschulempfehlung – du bist durchschnittlich, ruhig, ordentlich." },
-          { text: "Gymnasialempfehlung – deine Lehrer*innen fördern dich gezielt." }
-        ]
-      },
-      {
-        titel: "Schulphase 5–10",
-        karten: [
-          { text: "Stabile Leistung – du hast Freunde und kommst gut mit." },
-          { text: "Überforderung – du kämpfst mit Druck und Tempo." },
-          { text: "Fachinteresse – du entwickelst Talent in einem Bereich." }
-        ]
-      },
-      {
-        titel: "Übergang Sek II / Ausbildung",
-        karten: [
-          { text: "Reibungsloser Übergang – du startest motiviert in die Oberstufe oder Ausbildung." },
-          { text: "Warteschleife – keine Stelle, du machst eine Maßnahme." },
-          { text: "Wechsel in Fachrichtung – du suchst deinen Weg noch." }
-        ]
-      },
-      {
-        titel: "Abschluss",
-        karten: [
-          { text: "Ohne Abschluss – du verlässt das System vorzeitig." },
-          { text: "Berufsabschluss – du hast eine anerkannte Ausbildung." },
-          { text: "Abitur – du schließt die Oberstufe erfolgreich ab." }
-        ]
-      },
-      {
-        titel: "Beruf & Einkommen",
-        karten: [
-          { text: "Aushilfe im Lager – 3.008 € brutto/Monat." },
-          { text: "Bürokaufmann/-frau – 3.636 € brutto/Monat." },
-          { text: "Ingenieur*in Umwelttechnik – 4.710 € brutto/Monat." },
-          { text: "Lehrkraft mit Staatsexamen – 6.155 € brutto/Monat." }
+          { text: "Gymnasialempfehlung", wahrscheinlichkeit: 0 },
+          { text: "Realschulempfehlung", wahrscheinlichkeit: 0 },
+          { text: "Hauptschulempfehlung", wahrscheinlichkeit: 0 }
         ]
       }
     ];
 
+    const berufe = {
+      "Gymnasialempfehlung": { beruf: "Lehrkraft", einkommen: "6.155 € brutto/Monat" },
+      "Realschulempfehlung": { beruf: "Bürokaufmann/-frau", einkommen: "3.636 € brutto/Monat" },
+      "Hauptschulempfehlung": { beruf: "Aushilfe im Lager", einkommen: "3.008 € brutto/Monat" }
+    };
+
     let phase = 0;
     const log = [];
+    let spielerName = "";
+    let letzteEmpfehlung = "";
+
+    function startSpiel() {
+      const nameInput = document.getElementById("avatarName");
+      if (!nameInput.value) return alert("Bitte gib deinen Namen ein.");
+      spielerName = nameInput.value;
+      document.getElementById("biografie").style.display = "block";
+      aktualisierePfad();
+      ziehen();
+    }
+
+    function aktualisierePfad() {
+      const pfad = document.getElementById("pfad");
+      pfad.innerHTML = "";
+      for (let i = 0; i < stationen.length; i++) {
+        const kreis = document.createElement("div");
+        kreis.classList.add("schritt");
+        if (i === phase) kreis.classList.add("aktiv");
+        kreis.textContent = i + 1;
+        pfad.appendChild(kreis);
+      }
+    }
 
     function ziehen() {
       const output = document.getElementById("output");
       const logList = document.getElementById("log");
+
       if (phase < stationen.length) {
         const schritt = stationen[phase];
-        const karte = schritt.karten[Math.floor(Math.random() * schritt.karten.length)];
-        const eintrag = `<strong>${schritt.titel}:</strong> ${karte.text}`;
-        output.innerHTML = `<p>${eintrag}</p>`;
+
+        if (phase === 3) {
+          schritt.karten[0].wahrscheinlichkeit = herkunftstyp === "sehrhoch" ? 70 : herkunftstyp === "hoch" ? 50 : herkunftstyp === "mittel" ? 30 : 10;
+          schritt.karten[1].wahrscheinlichkeit = herkunftstyp === "sehrhoch" ? 25 : herkunftstyp === "hoch" ? 30 : herkunftstyp === "mittel" ? 40 : 30;
+          schritt.karten[2].wahrscheinlichkeit = herkunftstyp === "sehrhoch" ? 5 : herkunftstyp === "hoch" ? 20 : herkunftstyp === "mittel" ? 30 : 60;
+        }
+
+        const gewichtete = schritt.karten.flatMap(k => Array(Math.round(k.wahrscheinlichkeit)).fill(k));
+        const gezogen = gewichtete[Math.floor(Math.random() * gewichtete.length)];
+
+        if (phase === 0) {
+          herkunftInfo = gezogen.text;
+          herkunftstyp = gezogen.typ;
+        }
+        if (phase === 2 && gezogen.bonus) extraZug = true;
+        if (phase === 3) letzteEmpfehlung = gezogen.text;
+
+        const eintrag = `<strong>${schritt.titel}:</strong> ${gezogen.text}`;
         log.push(eintrag);
+
+        let verteilungHTML = '<div class="balken-container">';
+        schritt.karten.forEach(k => {
+          verteilungHTML += `<div class="balken"><span style="width: ${k.wahrscheinlichkeit}%">${k.text} (${k.wahrscheinlichkeit} %)</span></div>`;
+        });
+        verteilungHTML += '</div>';
+
+        output.innerHTML = `
+          <div class='karte' style='background:${schritt.farbe}'>
+            <p><span class='icon'>${schritt.icon}</span><strong>Phase ${phase + 1}: ${schritt.titel}</strong></p>
+            <p>${gezogen.text}</p>
+            <div class="info">${schritt.info}</div>
+            ${verteilungHTML}
+            <button class='btn' onclick='ziehen()'>Weiter gehen</button>
+          </div>`;
+
         phase++;
+        aktualisierePfad();
       } else {
-        output.innerHTML = `<p><strong>Spiel beendet.</strong> Deine Bildungsbiografie ist abgeschlossen.</p>`;
+        const beruf = berufe[letzteEmpfehlung] || { beruf: "(unbekannt)", einkommen: "–" };
+        output.innerHTML = `<p><strong>${spielerName}, dein Spiel ist beendet.</strong><br>Du hast folgende Bildungsbiografie durchlaufen:</p>
+        <p><strong>Beruf:</strong> ${beruf.beruf}</p>
+        <p><strong>Bruttoeinkommen:</strong> ${beruf.einkommen}</p>`;
       }
 
       logList.innerHTML = "";
