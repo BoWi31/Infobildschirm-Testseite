@@ -1,172 +1,121 @@
-<!DOCTYPE html>
-<html lang="de">
+<!DOCTYPE html><html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infobildschirm BoWi</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-        body {
-            background-color: #f0f0f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .header {
-            width: 100%;
-            height: 60px;
-            background: linear-gradient(90deg, #0066cc, #33cc33);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            color: white;
-            font-size: 20px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-        }
-        .clock {
-            font-size: 18px;
-        }
-        .container {
-            margin-top: 65px;
-            width: 100vw;
-            height: calc(100vh - 65px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        iframe {
-            width: 100vw;
-            height: 100vh;
-            border: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            opacity: 0;
-            transition: opacity 1s ease-in-out;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 5px;
-            background: lightgray;
-            position: fixed;
-            top: 60px;
-            left: 0;
-            z-index: 1000;
-        }
-        .progress {
-            height: 100%;
-            background: #33cc33;
-            width: 0%;
-            transition: width linear;
-        }
-        .navigation {
-            position: absolute;
-            top: 50%;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            transform: translateY(-50%);
-        }
-        .nav-button {
-            background-color: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 1001;
-        }
-        .nav-button:hover {
-            background-color: rgba(0, 0, 0, 0.7);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bildungsbiografie-Spiel</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f9f9f9; }
+    .karte { background: white; border-radius: 10px; padding: 1rem; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+    .btn { padding: 0.75rem 1.5rem; background: #007acc; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; }
+    .biografie { margin-top: 2rem; padding: 1rem; background: #e8f5e9; border-radius: 8px; }
+    #output p { font-size: 1.1rem; }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <div class="clock" id="clock"></div>
-        <div>Infobildschirm BoWi</div>
-    </div>
-    <div class="progress-bar" id="progress-bar"></div>
-    
-    <div class="container">
-        <div id="content"></div>
-        
-        <div class="navigation">
-            <button class="nav-button" onclick="prevScreen()">◀</button>
-            <button class="nav-button" onclick="nextScreen()">▶</button>
-        </div>
-    </div>
-    
-    <script>
-        function updateClock() {
-            const now = new Date();
-            let hours = now.getHours().toString().padStart(2, '0');
-            let minutes = now.getMinutes().toString().padStart(2, '0');
-            let seconds = now.getSeconds().toString().padStart(2, '0');
-            document.getElementById("clock").innerText = `${hours}:${minutes}:${seconds}`;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-        
-        const screens = [
-            { url: "https://ajax.webuntis.com/WebUntis/monitor?school=HRS%20Peine&monitorType=subst&format=Vertretung%20Le%20Wi", duration: 300000 },
-            { url: "https://bowi31.github.io/anschlussfoerderung", duration: 30000 },
-            { url: "https://www.meteoblue.com/en/weather/widget/daily?geoloc=fixed&days=3&tempunit=C&windunit=kmh&precipunit=mm&col=blue", duration: 30000 }
-        ];
-        
-        let currentIndex = 0;
+  <h1>Bildungsbiografie-Spiel</h1>
+  <div class="karte" id="output">
+    <p>Starte dein Leben: Klicke unten auf "Zieh".</p>
+  </div>
+  <button class="btn" onclick="ziehen()">Zieh</button>  <div class="biografie" id="biografie">
+    <h3>Deine Biografie:</h3>
+    <ul id="log"></ul>
+  </div>  <script>
+    const stationen = [
+      {
+        titel: "Herkunft",
+        karten: [
+          { text: "Hauptschuleltern – wenig Unterstützung, kaum Bücher." },
+          { text: "Realschuleltern – mittlere Bildung, wenig Förderung." },
+          { text: "Abi-Eltern – stabiles Umfeld mit Bildungserwartung." },
+          { text: "Akademikereltern – gezielte Förderung, Zugang zu Ressourcen." }
+        ]
+      },
+      {
+        titel: "Modifikator",
+        karten: [
+          { text: "Kein Modifikator – du startest ohne strukturelle Benachteiligung." },
+          { text: "Migrationshintergrund – Sprache & Systeme sind neu für deine Familie." },
+          { text: "Alleinerziehend – wenig Zeit für Unterstützung, viel Eigenverantwortung." },
+          { text: "Ländlicher Raum – weiter Schulweg, wenig Angebote." },
+          { text: "Behinderung – du hast eine diagnostizierte Lernstörung." },
+          { text: "Geflüchtet – du lebst in einem neuen Land mit vielen Herausforderungen." }
+        ]
+      },
+      {
+        titel: "Frühe Weichenstellung",
+        karten: [
+          { text: "Kein Kita-Besuch – du lernst Strukturen erst in der Schule kennen." },
+          { text: "Kita mit Sprachförderung – du entwickelst schnell Wortschatz & Ausdruck." },
+          { text: "Vorlesen zuhause – du entwickelst früh Interesse an Sprache." },
+          { text: "Unstrukturierter Alltag – du bist viel allein." }
+        ]
+      },
+      {
+        titel: "Grundschulempfehlung",
+        karten: [
+          { text: "Hauptschulempfehlung – wegen Noten und Verhalten." },
+          { text: "Realschulempfehlung – du bist durchschnittlich, ruhig, ordentlich." },
+          { text: "Gymnasialempfehlung – deine Lehrer*innen fördern dich gezielt." }
+        ]
+      },
+      {
+        titel: "Schulphase 5–10",
+        karten: [
+          { text: "Stabile Leistung – du hast Freunde und kommst gut mit." },
+          { text: "Überforderung – du kämpfst mit Druck und Tempo." },
+          { text: "Fachinteresse – du entwickelst Talent in einem Bereich." }
+        ]
+      },
+      {
+        titel: "Übergang Sek II / Ausbildung",
+        karten: [
+          { text: "Reibungsloser Übergang – du startest motiviert in die Oberstufe oder Ausbildung." },
+          { text: "Warteschleife – keine Stelle, du machst eine Maßnahme." },
+          { text: "Wechsel in Fachrichtung – du suchst deinen Weg noch." }
+        ]
+      },
+      {
+        titel: "Abschluss",
+        karten: [
+          { text: "Ohne Abschluss – du verlässt das System vorzeitig." },
+          { text: "Berufsabschluss – du hast eine anerkannte Ausbildung." },
+          { text: "Abitur – du schließt die Oberstufe erfolgreich ab." }
+        ]
+      },
+      {
+        titel: "Beruf & Einkommen",
+        karten: [
+          { text: "Aushilfe im Lager – 3.008 € brutto/Monat." },
+          { text: "Bürokaufmann/-frau – 3.636 € brutto/Monat." },
+          { text: "Ingenieur*in Umwelttechnik – 4.710 € brutto/Monat." },
+          { text: "Lehrkraft mit Staatsexamen – 6.155 € brutto/Monat." }
+        ]
+      }
+    ];
 
-        function showScreen(index) {
-            const content = document.getElementById("content");
-            content.innerHTML = `<iframe src="${screens[index].url}" width="100%" height="100%" frameborder="0"></iframe>`;
-            setTimeout(() => {
-                content.firstChild.style.opacity = "1";
-            }, 100);
-            updateProgressBar(screens[index].duration);
-        }
+    let phase = 0;
+    const log = [];
 
-        function updateProgressBar(duration) {
-            const bar = document.getElementById("progress-bar");
-            bar.innerHTML = `<div class="progress"></div>`;
-            setTimeout(() => {
-                bar.firstChild.style.width = "100%";
-                bar.firstChild.style.transition = `width ${duration / 1000}s linear`;
-            }, 100);
-        }
+    function ziehen() {
+      const output = document.getElementById("output");
+      const logList = document.getElementById("log");
+      if (phase < stationen.length) {
+        const schritt = stationen[phase];
+        const karte = schritt.karten[Math.floor(Math.random() * schritt.karten.length)];
+        const eintrag = `<strong>${schritt.titel}:</strong> ${karte.text}`;
+        output.innerHTML = `<p>${eintrag}</p>`;
+        log.push(eintrag);
+        phase++;
+      } else {
+        output.innerHTML = `<p><strong>Spiel beendet.</strong> Deine Bildungsbiografie ist abgeschlossen.</p>`;
+      }
 
-        function cycleScreens() {
-            showScreen(currentIndex);
-            setTimeout(() => {
-                currentIndex = (currentIndex + 1) % screens.length;
-                cycleScreens();
-            }, screens[currentIndex].duration);
-        }
-        
-        function nextScreen() {
-            currentIndex = (currentIndex + 1) % screens.length;
-            showScreen(currentIndex);
-        }
-        
-        function prevScreen() {
-            currentIndex = (currentIndex - 1 + screens.length) % screens.length;
-            showScreen(currentIndex);
-        }
-        
-        showScreen(currentIndex);
-        cycleScreens();
-    </script>
-</body>
+      logList.innerHTML = "";
+      log.forEach(e => {
+        const li = document.createElement("li");
+        li.innerHTML = e;
+        logList.appendChild(li);
+      });
+    }
+  </script></body>
 </html>
