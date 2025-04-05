@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bildungsbiografie-Spiel</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 2rem;
+    }
+    .karte {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      background: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .btn:hover { background: #004a99; }
+    .info, .biografie { margin-top: 1rem; font-size: 0.95rem; color: #333; }
+  </style>
+</head>
+<body>
+  <h1>Bildungsbiografie-Spiel</h1>
+  <div class="karte">
+    <p><strong>Warum dieses Spiel?</strong></p>
+    <p>In Deutschland entscheidet die soziale Herkunft maßgeblich über Bildungschancen. Dieses Spiel macht erlebbar, wie ungleiche Startbedingungen zu unterschiedlichen Lebenswegen führen – trotz gleicher Potenziale.</p>
+    <p>Du durchläufst mehrere Phasen des Bildungssystems – geprägt von Zufällen, Modifikatoren und realen Wahrscheinlichkeiten.</p>
+    <p><strong>Jeder Schritt ist ein Dreh am Rad der (Un-)Gleichheit.</strong></p>
+  </div>
+  <div class="karte" id="output">
+    <p>Wie heißt du?</p>
+    <input id="avatarName" placeholder="Dein Vorname..." />
+    <button class="btn" onclick="startSpiel()">Spiel starten</button>
+  </div>
+  <div class="karte biografie" id="biografie" style="display:none;">
+    <h3>Deine Biografie:</h3>
+    <ul id="log"></ul>
+    <div id="abschlussBeruf"></div>
+  </div>
+
+<script>
+// Simulation wird in JavaScript eingebettet – verkürzt für Demo-Zwecke
+function startSpiel() {
+  const name = document.getElementById("avatarName").value;
+  const out = document.getElementById("output");
+  const bio = document.getElementById("biografie");
+  const log = document.getElementById("log");
+  const abschlussBeruf = document.getElementById("abschlussBeruf");
+  if (!name) return alert("Bitte gib deinen Namen ein.");
+
+  out.innerHTML = "<p><strong>Willkommen, " + name + "!</strong><br>Dein Bildungsweg beginnt...</p>";
+  log.innerHTML = "";
+  abschlussBeruf.innerHTML = "";
+
+  const schritte = [
+    "Du wirst in eine Familie mit Hauptschuleltern geboren. Bücher sind selten, Förderung begrenzt.",
+    "Deine Mutter ist alleinerziehend – wenig Zeit für Unterstützung, du lernst früh selbstständig zu sein.",
+    "Du gehst nicht in die Kita. Strukturen und Gruppenerfahrung fehlen dir beim Schuleintritt.",
+    "In der Grundschule bekommst du eine Hauptschulempfehlung – trotz deiner Neugier.",
+    "In der weiterführenden Schule wiederholst du eine Klasse. Du verlierst etwas Motivation.",
+    "Beim Übergang in die Ausbildung bekommst du erst eine Maßnahme – keine Stelle gefunden.",
+    "Du schließt eine Berufsausbildung als Pflegekraft ab.",
+  ];
+
+  const berufsauswahl = [
+    { beruf: "Pflegefachkraft", gehalt: "3.900 € brutto" },
+    { beruf: "Bürokaufmann/-frau", gehalt: "3.636 € brutto" },
+    { beruf: "Erzieher*in", gehalt: "3.200 € brutto" }
+  ];
+
+  schritte.forEach((eintrag, i) => {
+    setTimeout(() => {
+      const li = document.createElement("li");
+      li.textContent = eintrag;
+      log.appendChild(li);
+      if (i === schritte.length - 1) {
+        setTimeout(() => {
+          abschlussBeruf.innerHTML = "<p><strong>Wähle einen Beruf, den du nun ausübst:</strong></p>" + berufsauswahl.map(b => 
+            `<button class='btn' onclick='alert("Du hast dich für den Beruf ${b.beruf} entschieden. Bruttogehalt: ${b.gehalt}")'>${b.beruf} (${b.gehalt})</button>`).join("<br><br>");
+        }, 1500);
+      }
+    }, 1000 * i);
+  });
+
+  bio.style.display = "block";
+}
+</script>
+</body>
+</html>
